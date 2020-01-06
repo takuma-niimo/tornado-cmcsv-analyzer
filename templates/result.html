@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}completed{% end %}
+
+{% block content %}
+<h1>Result</h1>
+<table id="rTable" class="table table-hover table-striped tablesorter-dropbox">
+  <thead>
+  <tr>
+    <th>#</th>
+    <th>name</th>
+    <th>領収書</th>
+    <th>宛名</th>
+    <th>但書</th>
+  </tr>
+  </thead>
+  <tbody>
+{% for a, b, c, d in zip(ta, tb, tc, td) %}
+  <tr>
+    <td>{{ a }}</td>
+    <td>{{ b }}</td>
+    <td>{% if c or d %}o{% end %}</td>
+    <td>{{ c }}</td>
+    <td>{{ d }}</td>
+  </tr>
+{% end %}
+  </tbody>
+</table>
+
+{% end %}
