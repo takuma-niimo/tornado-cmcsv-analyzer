@@ -1,18 +1,9 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 import json, os, uuid, csv, re, pprint
-from html import unescape
 import tornado
 import tornado.ioloop
 import tornado.web
-
-# import replace list, template html
-#rlist = json.load(open('replace.json', 'r'))
-#html = open('templates/base.html').read()
-
-# replace text
-#for key in rlist:
-#  html = html.replace(key, rlist[key])
 
 def remarks_analyze(txt):
   atena = ''
