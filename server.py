@@ -66,22 +66,22 @@ def csvanalyzer(csvdic):
   return num, name, name2, what
 
 
-class Userform(tornado.web.RequestHandler):
+class receiptSheetForm(tornado.web.RequestHandler):
   """
-  @class Userform
-  @brief リクエストを受けたら fileuploadform.html を返す
+  @class receiptSheetForm
+  @brief リクエストを受けたら receiptSheet/form.html を返す
   """
 
   def get(self):
     self.render(
-      'fileuploadform.html'
+      'receiptSheet/form.html'
     )
 
-class Upload(tornado.web.RequestHandler):
+class receiptSheetUpload(tornado.web.RequestHandler):
   """
-  @class Upload
+  @class receiptSheetUpload
   @brief POSTでCSVデータをもらう
-  @details POSTで受けたデータを分析して result.html でレンダリングする
+  @details POSTで受けたデータを分析して receiptSheet/result.html でレンダリングする
   @warning warning
   @note note
   """
@@ -100,7 +100,7 @@ class Upload(tornado.web.RequestHandler):
     (num, name, name2, what) = csvanalyzer(csvdic)
 
     self.render(
-      'result.html',
+      'receiptSheet/result.html',
       ta = num,
       tb = name,
       tc = name2,
@@ -108,12 +108,116 @@ class Upload(tornado.web.RequestHandler):
     )
     #self.finish()
 
+class addQuantityB2csvForm(tornado.web.RequestHandler):
+  """
+  @class addQuantityB2csvForm
+  @brief item.csv, order.csv をもとに delivery_list.csv の品目に個数を追加する
+  """
+
+  def get(self):
+    self.render(
+      'addQuantityB2csv/form.html'
+    )
+
+def addQ(o, i, dd, dt):
+  dlist = dt.split('\n')
+  output = []
+  output.append(dlist[0])
+  for drow in dd:
+    dnum = drow['お客様管理番号']
+    dpname1 = drow['品名１']
+    dpname2 = drow['品名２']
+    code1 = []
+    code2 = []
+    quantity1 = ''
+    quantity2 = ''
+
+    # item.csv から商品コードを検索
+    if dpname1 != '':
+      for irow in i:
+        if irow['品目'] == dpname1:
+          code1.append(irow['商品コード'])
+
+    if dpname2 != '':
+      for irow in i:
+        if irow['品目'] == dpname2:
+          code2.append(irow['商品コード'])
+
+    if code1 == '' and code2 == '':
+      output.append(drow)
+      continue
+
+    # order.csv から商品コードに一致する行の数量を検索
+    for orow in o:
+      if orow['管理番号'] == dnum:
+        for code in code1:
+          if code == orow['商品コード']:
+            quantity1 = orow['数量']
+        for code in code2:
+          if code ==  orow['商品コード']:
+            quantity2 = orow['数量']
+
+    # B2用CSVの「品名」行書き換え
+    for dlistrow in dlist:
+      if dnum in dlistrow:
+        if dpname1 != '' and quantity1 != '1':
+          r = quantity1 + ')' + dpname1
+          dlistrow  = dlistrow.replace(dpname1, r)
+        if dpname2 != '' and quantity2 != '1':
+          r = quantity2 + ')' + dpname2
+          dlistrow = dlistrow.replace(dpname2, r)
+        output.append(dlistrow)
+        break
+
+  dtxt = '\n'.join(output)
+
+  return dtxt
+
+
+class addQuantityB2csvUpload(tornado.web.RequestHandler):
+  def post(self):
+    orderinfo     = self.request.files['order'][0]
+    iteminfo      = self.request.files['item'][0]
+    deliveryinfo  = self.request.files['delivery'][0]
+
+    (oname, iname, dname) = \
+      (orderinfo['filename'], iteminfo['filename'], deliveryinfo['filename'])
+
+    oTxt = orderinfo['body'].decode('shift_jis', 'ignore')
+    iTxt = iteminfo['body'].decode('shift_jis', 'ignore')
+    dTxt = deliveryinfo['body'].decode('shift_jis', 'ignore')
+
+    odic = [{k: v for k, v in row.items()} for row in csv.DictReader(oTxt.splitlines(), skipinitialspace=True)]
+    idic = [{k: v for k, v in row.items()} for row in csv.DictReader(iTxt.splitlines(), skipinitialspace=True)]
+    ddic = [{k: v for k, v in row.items()} for row in csv.DictReader(dTxt.splitlines(), skipinitialspace=True)]
+
+    csvtxt = addQ(odic, idic, ddic, dTxt)
+
+    self.set_header('Content-Type', "text/csv")
+    self.set_header('Content-Disposition',
+        "attachment; filename=\"{}\"".format('addQ_' + dname))
+    self.set_header('Content-Length', len(csvtxt.encode('shift_jis')))
+    self.write(csvtxt.encode('shift_jis'))
+
+class Welcome(tornado.web.RequestHandler):
+  """
+  @class Welcome
+  @brief ウェルカム画面
+  """
+
+  def get(self):
+    self.render(
+      'welcome.html'
+    )
 
 BASE_DIR = os.path.dirname(__file__)
 
 application = tornado.web.Application([
-  (r"/", Userform),
-  (r"/upload", Upload),
+  (r"/", Welcome),
+  (r"/receiptForm", receiptSheetForm),  # 領収書が必要かどうか判別する機能
+  (r"/receiptUpload", receiptSheetUpload),
+  (r"/addQuantityB2csvForm", addQuantityB2csvForm),
+  (r"/addQuantityB2csvUpload", addQuantityB2csvUpload),
   ],
   template_path = os.path.join(BASE_DIR, 'templates'),
   static_path = os.path.join(BASE_DIR, 'static'),

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}B2商品個数追加{% end %}
+
+{% block content %}
+<h1>B2用CSVの「品目」に商品個数を追加します</h1>
+
+<form action="/addQuantityB2csvUpload" enctype="multipart/form-data" method="post">
+  order.csv(CSVダウンロード &gt; <b>種別：注文詳細、定義：注文個数用</b>)  <input type="file" name="order">
+  item.csv(CSVダウンロード &gt; <b>種別：商品情報、定義：注文個数用</b>) <input type="file" name="item">
+  delivery_list.csv(B2に読み込む予定のCSVファイル) <input type="file" name="delivery">
+  <input type="submit" value="upload">
+</form>
+
+{% end %}
