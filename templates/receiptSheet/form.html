@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}領収書いる??{% end %}
+
+{% block content %}
+<h1>領収書いるかな? 判別機能</h1>
+<form enctype="multipart/form-data" action="/receiptUpload" method="post">
+  クロスモールの注文詳細CSVをアップロードしてください。<br>
+  領収書が必要かどうかと、宛名/但し書きをまとめて判別します。<br>
+  <input type="file" name="filearg">
+  <input type="submit" value="upload">
+</form>
+{% end %}
