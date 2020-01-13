@@ -1,6 +1,6 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
-import json, os, uuid, csv, re, pprint, sys
+import os, csv, re, pprint, sys
 import tornado
 import tornado.ioloop
 import tornado.web
